@@ -56,8 +56,6 @@ class FullConnectedLayer(object):
       self.activator = SigmoidActivator()
     elif activator == 'SoftmaxActivator':
       self.activator = SoftmaxActivator()
-    elif activator == 'ReLUActivator':
-      self.activator = ReLUActivator()
     else:
       debug('Unkown activator: %s' % (activator))
       sys.exit(1)
