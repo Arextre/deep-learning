@@ -9,6 +9,8 @@ ISDEBUG = False
 def debug(*args, **kwargs):
   if ISDEBUG:
     print(*args, **kwargs)
+def RaiseNotImplementedError():
+  raise NotImplementedError('Not implemented yet.')
 
 class ReLUActivator(object):
   def forward(self, input):
@@ -38,7 +40,10 @@ class SoftmaxActivator(object):
   def forward(self, input):
     return np.exp(input) / np.sum(np.exp(input))
   def backward(self, output):
-    return output * (1 - output)
+    # wrong backward propagation implementation, 
+    # maybe it cannot be wrapped by a single function
+    # return output * (1 - output)
+    RaiseNotImplementedError()
 
 class Network(object):
   def __init__(self, layers):
@@ -50,7 +55,7 @@ class Network(object):
     self.W2 = np.random.uniform(-0.1, 0.1, (self.k, self.m))
     self.b1 = np.zeros((self.m, 1))
     self.b2 = np.zeros((self.k, 1))
-    self.f1 = LeakyReLUActivator()
+    self.f1 = ReLUActivator()
     self.f2 = SoftmaxActivator()
   
   def predict(self, feature):
@@ -84,11 +89,11 @@ class Network(object):
         self.predict(features[d])
         self.backward(labels[d])
         self.update(rate)
-  
+
   def loss(self, label):
     assert(self.k == len(label))
     return -np.sum(label * np.log(self.output))
-  
+
 def grad_check():
   net = Network([3, 8, 2])
   feature = np.array([[1], [2], [3]])
@@ -132,69 +137,5 @@ def grad_check():
         print('<----- Grad_check failed. ----->')
         sys.exit(1)
 
-def get_result(vec):
-  assert(len(vec) == 10)
-  mxx = 0.0
-  mxx_index = -1
-  for i in range(10):
-    # real_val = -np.log(vec[i])
-    real_val = vec[i]
-    if real_val > mxx:
-      mxx = vec[i]
-      mxx_index = i
-  return mxx_index
-
-def evaluate(network, test_labels, test_data):
-  error = 0
-  total = len(test_labels)
-  for i in range(total):
-    label = get_result(test_labels[i])
-    predict = get_result(network.predict(test_data[i]))
-    if label != predict:
-      error += 1
-  return float(error) / total
-
-def train_and_evaluate():
-  last_error_ratio = 1.0
-  epoch = 0
-
-  # parameters of network & training
-  rate = 0.0005
-  hidden_layer_size = 300
-  iterationtime = 1
-
-  network = Network([784, hidden_layer_size, 10])
-
-  (raw_train_features, raw_train_labels), (raw_test_features, raw_test_labels) = keras.datasets.mnist.load_data()
-  raw_train_labels = keras.utils.to_categorical(raw_train_labels, num_classes = 10)
-  raw_test_labels = keras.utils.to_categorical(raw_test_labels, num_classes = 10)
-  debug('Train data shape: ', raw_train_features.shape)
-  train_size = len(raw_train_labels)
-  test_size = len(raw_test_features)
-  train_labels = []
-  train_features = []
-  test_labels = []
-  test_features = []
-  for i in range(train_size):
-    train_features.append(raw_train_features[i].reshape(784, 1).astype(np.float32) / 255.0)
-    train_labels.append(raw_train_labels[i].reshape((10, 1)).astype(np.float32))
-  for i in range(test_size):
-    test_features.append(raw_test_features[i].reshape(784, 1).astype(np.float32) / 255.0)
-    test_labels.append(raw_test_labels[i].reshape((10, 1)).astype(np.float32))
-
-  while True:
-    epoch += 1
-    network.train(train_labels, train_features, rate, iterationtime)
-    print('When %s :> epoch %d finished' % (datetime.datetime.now(), epoch))
-    if epoch % 5 == 0:
-      error_ratio = evaluate(network, test_labels, test_features)
-      print('Epoch %s finished, error ratio: %f' % (epoch, error_ratio))
-      if error_ratio > last_error_ratio:
-        break
-      else:
-        last_error_ratio = error_ratio
-  print('<----- The final error ratio: %f ----->' % (last_error_ratio))
-
 if __name__ == '__main__':
   grad_check()
-  train_and_evaluate()
