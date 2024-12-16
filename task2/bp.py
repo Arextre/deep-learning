@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import numpy as np
 import sys
 import keras
@@ -50,7 +48,7 @@ class Network(object):
     self.W2 = np.random.uniform(-0.1, 0.1, (self.k, self.m))
     self.b1 = np.zeros((self.m, 1))
     self.b2 = np.zeros((self.k, 1))
-    self.f1 = LeakyReLUActivator()
+    self.f1 = ReLUActivator()
     self.f2 = SoftmaxActivator()
   
   def predict(self, feature):
