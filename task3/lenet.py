@@ -11,7 +11,6 @@ dtype = torch.float32
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ISDEBUG = True
-
 def debug(*args, **kwargs):
   if ISDEBUG:
     print(*args, **kwargs)
@@ -32,6 +31,7 @@ class LeNet(nn.Module):
   def forward(self, x):
     return self.model(x)
 
+
 def train(model, criterion, optimizer, trainset, iteration):
   model.train()
   # debug(">>>>> Trainset size: ", len(trainset))
@@ -44,13 +44,14 @@ def train(model, criterion, optimizer, trainset, iteration):
       features = features.to(device)
       labels = labels.to(device)
 
-      # debug(">>>>> Features shape: ", features.shape)
-
       output = model.forward(features)
       loss = criterion(output, labels)
 
       loss.backward()
       optimizer.step()
+
+      if (d + 1) % 100 == 0:
+        print("Iteration: %d, Loss: %f" % (d + 1, loss.item()))
 
 def evaluate(model, testset):
   model.eval()
@@ -67,10 +68,10 @@ def evaluate(model, testset):
       _, predict = torch.max(output, 1)
       if predict != label:
         error += 1
-  
 
   return float(error) / testset_size
-    
+
+
 
 if __name__ == '__main__':
 
