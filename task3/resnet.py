@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
   model = resnet18(num_classes = 10).to(device)
   # rewrite the first layer to accept 1 channel
-  model.conv1 = nn.Conv2d(1, 64, kernel_size = (7, 7), stride = (2, 2), padding = (3, 3), bias = False)
+  model.conv1 = nn.Conv2d(1, 64, kernel_size = (7, 7), stride = (2, 2), padding = (3, 3), bias = False).to(device)
   debug("Model structure:\n", model)
 
   criterion = nn.CrossEntropyLoss()
