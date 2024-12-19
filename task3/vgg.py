@@ -43,7 +43,8 @@ class VGG(nn.Module):
     return x
 
 if __name__ == '__main__':
-  """ # transformer for VGG-16
+  """
+  # transformer for VGG-16
   imageTransformer = transforms.Compose([
     transforms.Resize(224), # resize the image to 224x224
     transforms.Grayscale(num_output_channels = 3), # vgg requires 3 channels input
@@ -56,13 +57,14 @@ if __name__ == '__main__':
     transforms.ToTensor(),
     transforms.Normalize(mean = (0.5,), std = (0.5,))
   ])
+
   trainset = dsets.MNIST(root = './data', train = True, download = True, transform = imageTransformer)
   testset = dsets.MNIST(root = './data', train = False, download = True, transform = imageTransformer)
 
   # Hyperparameters: VGG-16
   # used on NVIDIA GPU
   # config = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M']
-  # model = VGG(config, classi_size = 4096, imgChannel = 3, num_classes = 10).to(device)
+  # model = VGG(config, classi_size = 2048, imgChannel = 3, num_classes = 10).to(device)
 
   # a tiny VGG, for AMD CPU on my laptop
   config = [32, 'M', 64, 'M']
