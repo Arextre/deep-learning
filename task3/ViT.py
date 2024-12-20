@@ -124,9 +124,12 @@ class TransformerEncoder(nn.Module):
 
 class ViT(nn.Module):
   # input should be a 4D tensor (batch, channels, size, size)
-  def __init__(self, img_size, in_channels, patch_size, embedding_size, num_heads, mlp_size, num_classes, depth):
+  def __init__(self, img_size, in_channels, patch_size, embedding_size, num_heads, mlp_size, num_classes, depth, strict_mode = True):
     super(ViT, self).__init__()
-    assert(in_channels * patch_size**2 == embedding_size)
+    if strict_mode:
+      assert(in_channels * patch_size**2 == embedding_size,
+        "ViT Strict Mode Error: in_channels * patch_size^2 should be equal to embedding_size"
+      )
     assert(img_size % patch_size == 0) # should be divided
 
     self.img_size = img_size
@@ -139,7 +142,7 @@ class ViT(nn.Module):
     self.depth = depth
     
     self.embedding_layer = VisionEmbedding(img_size, in_channels, embedding_size, patch_size)
-    self.encoder = nn.ModuleList([
+    self.encoders = nn.ModuleList([
       TransformerEncoder(embedding_size, num_heads, mlp_size, dropout_ratio = 0.5) for _ in range(depth)
     ])
 
@@ -150,7 +153,8 @@ class ViT(nn.Module):
     # (batch, channels, size, size)
     x = self.embedding_layer(x)
     # (batch, num_patch+1, embedding_size)
-    x = self.encoder(x)
+    for encoder in self.encoders:
+      x = encoder(x)
     # (B, N, D)
     x = self.norm(x)
     # (B, N, D)
@@ -162,8 +166,9 @@ class ViT(nn.Module):
 
 if __name__ == '__main__':
   modelParam = {
-    "TinyViT": [28, 1, 7, 49, 7, 128, 10, 3],
-    "StdViT": [224, 3, 16, 768, 12, 2048, 10, 12]
+    "TinyViT": (28, 1, 7, 49, 7, 128, 10, 3),
+    "StdViT": (224, 3, 16, 768, 12, 2048, 10, 12),
+    "TestViT": (112, 1, 14, 196, 14, 256, 10, 3),
   }
   imgTransformer = {
     "TinyViT": transforms.Compose([
@@ -175,10 +180,15 @@ if __name__ == '__main__':
       transforms.Grayscale(num_output_channels = 3),
       transforms.ToTensor(),
       transforms.Normalize(mean = (0.5, 0.5, 0.5), std = (0.5, 0.5, 0.5))
-    ])
+    ]),
+    "TestViT": transforms.Compose([
+      transforms.Resize(112),
+      transforms.ToTensor(),
+      transforms.Normalize(mean = (0.5,), std = (0.5,))
+    ]),
   }
 
-  modelVer = 'TinyViT'
+  modelVer = 'TestViT'
 
   model = ViT(*modelParam[modelVer]).to(device)
   trainset = dsets.MNIST(root = './data', train = True, download = True, transform = imgTransformer[modelVer])
@@ -198,7 +208,7 @@ if __name__ == '__main__':
     train(model, criterion, optimizer, trainset, iteration)
     if epoch % 5 == 0:
       ratio = evaluate(model, testset)
-      print("Epoch %d, Error ratio: %f" % (epoch, ratio))
+      print("<----- Epoch %d, Error ratio: %f ----->" % (epoch, ratio))
       if last_ratio < ratio:
         break
       else:
