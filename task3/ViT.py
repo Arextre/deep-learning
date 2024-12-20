@@ -93,6 +93,30 @@ class MultiheadSelfAttention(nn.Module):
 
 MSA = MultiheadSelfAttention
 
+
+
+class MultilayerPerceptron(nn.Module):
+  def __init__(self, embedding_size, mlp_size, dropout_ratio = 0.5):
+    super(MultilayerPerceptron, self).__init__()
+    self.embedding_size = embedding_size
+    self.mlp_size = mlp_size
+    self.dropout_ratio = dropout_ratio
+
+    self.MLP = nn.Sequential(
+      nn.Linear(embedding_size, mlp_size),
+      nn.GELU(),
+      nn.Dropout(dropout_ratio),
+      nn.Linear(mlp_size, embedding_size),
+      nn.Dropout(dropout_ratio)
+    )
+  
+  def forward(self, x):
+    return self.MLP(x)
+
+MLP = MultilayerPerceptron
+
+
+
 class TransformerEncoder(nn.Module):
   def __init__(self, embedding_size, num_heads, mlp_size, dropout_ratio = 0.5):
     super(TransformerEncoder, self).__init__()
@@ -106,13 +130,7 @@ class TransformerEncoder(nn.Module):
     self.MSA = MSA(embedding_size, num_heads, dropout_ratio)
 
     self.normMLP = nn.LayerNorm(embedding_size)
-    self.MLP = nn.Sequential(
-      nn.Linear(embedding_size, mlp_size),
-      nn.GELU(),
-      nn.Dropout(dropout_ratio),
-      nn.Linear(mlp_size, embedding_size),
-      nn.Dropout(dropout_ratio)
-    )
+    self.MLP = MLP(embedding_size, mlp_size, dropout_ratio)
 
   def forward(self, x):
     x = x + self.MSA(self.normMSA(x))
@@ -124,12 +142,10 @@ class TransformerEncoder(nn.Module):
 
 class ViT(nn.Module):
   # input should be a 4D tensor (batch, channels, size, size)
-  def __init__(self, img_size, in_channels, patch_size, embedding_size, num_heads, mlp_size, num_classes, depth, strict_mode = True):
+  def __init__(self, img_size, in_channels, patch_size, embedding_size, num_heads, mlp_size, dropout_ratio, num_classes, depth, strict_mode = True):
     super(ViT, self).__init__()
     if strict_mode:
-      assert(in_channels * patch_size**2 == embedding_size,
-        "ViT Strict Mode Error: in_channels * patch_size^2 should be equal to embedding_size"
-      )
+      assert(in_channels * patch_size**2 == embedding_size) # strict mode
     assert(img_size % patch_size == 0) # should be divided
 
     self.img_size = img_size
@@ -143,8 +159,10 @@ class ViT(nn.Module):
     
     self.embedding_layer = VisionEmbedding(img_size, in_channels, embedding_size, patch_size)
     self.encoders = nn.ModuleList([
-      TransformerEncoder(embedding_size, num_heads, mlp_size, dropout_ratio = 0.5) for _ in range(depth)
+      TransformerEncoder(embedding_size, num_heads, mlp_size, dropout_ratio) for _ in range(depth)
     ])
+
+    self.MLP = MLP(embedding_size, mlp_size, dropout_ratio)
 
     self.norm = nn.LayerNorm(embedding_size)
     self.classifier = nn.Linear(embedding_size, num_classes)
@@ -156,6 +174,8 @@ class ViT(nn.Module):
     for encoder in self.encoders:
       x = encoder(x)
     # (B, N, D)
+    x = self.MLP(x)
+    # (B, N, D)
     x = self.norm(x)
     # (B, N, D)
     x = self.classifier(x[:, 0])
@@ -166,9 +186,9 @@ class ViT(nn.Module):
 
 if __name__ == '__main__':
   modelParam = {
-    "TinyViT": (28, 1, 7, 49, 7, 128, 10, 3),
-    "StdViT": (224, 3, 16, 768, 12, 2048, 10, 12),
-    "TestViT": (112, 1, 14, 196, 14, 256, 10, 3),
+    "TinyViT": (28, 1, 7, 49, 7, 128, 0.5, 10, 3),
+    "StdViT": (224, 3, 16, 768, 12, 2048, 0.5, 10, 12),
+    "TestViT": (112, 1, 14, 196, 14, 256, 0.5, 10, 3),
   }
   imgTransformer = {
     "TinyViT": transforms.Compose([
@@ -188,7 +208,7 @@ if __name__ == '__main__':
     ]),
   }
 
-  modelVer = 'TestViT'
+  modelVer = 'TinyViT'
 
   model = ViT(*modelParam[modelVer]).to(device)
   trainset = dsets.MNIST(root = './data', train = True, download = True, transform = imgTransformer[modelVer])
