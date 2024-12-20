@@ -1,2 +1,5 @@
 ign*
 __pycache__
+
+# data of task4 is a little bit large, ignored
+TinySeg

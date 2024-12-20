@@ -188,7 +188,7 @@ if __name__ == '__main__':
   modelParam = {
     "TinyViT": (28, 1, 7, 49, 7, 128, 0.5, 10, 3),
     "StdViT": (224, 3, 16, 768, 12, 2048, 0.5, 10, 12),
-    "TestViT": (112, 1, 14, 196, 14, 256, 0.5, 10, 3),
+    "TestViT": (56, 1, 7, 49, 7, 256, 0.5, 10, 3),
   }
   imgTransformer = {
     "TinyViT": transforms.Compose([
@@ -202,13 +202,13 @@ if __name__ == '__main__':
       transforms.Normalize(mean = (0.5, 0.5, 0.5), std = (0.5, 0.5, 0.5))
     ]),
     "TestViT": transforms.Compose([
-      transforms.Resize(112),
+      transforms.Resize(56),
       transforms.ToTensor(),
       transforms.Normalize(mean = (0.5,), std = (0.5,))
     ]),
   }
 
-  modelVer = 'TinyViT'
+  modelVer = 'TestViT'
 
   model = ViT(*modelParam[modelVer]).to(device)
   trainset = dsets.MNIST(root = './data', train = True, download = True, transform = imgTransformer[modelVer])
@@ -216,7 +216,7 @@ if __name__ == '__main__':
   print(model)
   
   criterion = nn.CrossEntropyLoss()
-  optimizer = optim.Adam(model.parameters(), lr = 0.0005)
+  optimizer = optim.Adam(model.parameters(), lr = 0.0001)
 
   last_ratio = 1.0
   epoch = 0

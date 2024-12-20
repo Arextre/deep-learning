@@ -19,11 +19,17 @@ class LeNet(nn.Module):
   def __init__(self):
     super(LeNet, self).__init__()
     self.model = nn.Sequential(
+      # 1x28x28
       nn.Conv2d(1, 6, 5),
+      # 6x24x24
       nn.MaxPool2d(2, 2),
+      # 6x12x12
       nn.Conv2d(6, 16, 5),
+      # 16x8x8
       nn.MaxPool2d(2, 2),
+      # 16x4x4
       nn.Conv2d(16, 120, 4),
+      # 120x1x1
       nn.Flatten(),
       nn.Linear(120, 84),
       nn.Linear(84, 10)
