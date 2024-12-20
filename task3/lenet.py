@@ -39,6 +39,7 @@ def train(model, criterion, optimizer, trainset, iteration):
   loader = DataLoader(trainset, batch_size = batch_size, shuffle = True)
 
   for i in range(iteration):
+    print("Iteration: %d" % (i + 1))
     for d, (features, labels) in enumerate(loader, 0):
       optimizer.zero_grad()
       features = features.to(device)
@@ -51,7 +52,7 @@ def train(model, criterion, optimizer, trainset, iteration):
       optimizer.step()
 
       if (d + 1) % 100 == 0:
-        print("Iteration: %d, Loss: %f" % (d + 1, loss.item()))
+        print("Data round: %d, Loss: %f" % (d + 1, loss.item()))
 
 def evaluate(model, testset):
   model.eval()
