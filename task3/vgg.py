@@ -23,17 +23,17 @@ class VGG(nn.Module):
         layers.append(nn.MaxPool2d(kernel_size = 2, stride = 2))
       else:
         layers.append(nn.Conv2d(in_channels, v, kernel_size = 3, padding = 1))
-        layers.append(nn.ReLU(inplace = True))
+        layers.append(nn.ReLU())
         in_channels = v # update the in_channels
     
     self.features = nn.Sequential(*layers)
     self.classifies = nn.Sequential(
       nn.Flatten(),
       nn.Linear(in_channels * 7 * 7, classi_size),
-      nn.ReLU(inplace = True),
+      nn.ReLU(),
       nn.Dropout(p = 0.5),
       nn.Linear(classi_size, classi_size),
-      nn.ReLU(inplace = True),
+      nn.ReLU(),
       nn.Linear(classi_size, num_classes)
     )
   

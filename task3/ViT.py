@@ -64,7 +64,7 @@ class MultiheadSelfAttention(nn.Module):
     self.num_heads = num_heads
 
     self.head_dim = embedding_size // num_heads
-    self.scale = self.head_dim ** -0.5 # scale factor
+    self.scale = self.head_dim**-0.5 # scale factor
     self.qkvTrans = nn.Linear(embedding_size, embedding_size * 3, bias = False) # no bias added
     self.attnDrop = nn.Dropout(dropout_ratio)
 
