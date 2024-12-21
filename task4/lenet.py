@@ -72,8 +72,8 @@ def train(model, criterion, optimizer, trainset, iteration, batch_size = 50):
       optimizer.step()
 
       if (d + 1) % 20 == 0:
-        print("outputs[0]: ", outputs[0])
-        print("answers[0]: ", labels[0])
+        debug("outputs[0]: ", outputs[0])
+        debug("answers[0]: ", labels[0])
         print("Data Round %d: Loss = %f" % (d + 1, loss.item()))
 
 def evaluate(model, testset, batch_size = 50):
